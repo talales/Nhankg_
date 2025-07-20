@@ -1,0 +1,131 @@
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+---====== Define spawner ======---
+
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V1/Source.lua"))()
+
+---====== Create entity ======---
+
+local entity = Spawner.createEntity({
+    CustomName = "Torment",
+    Model = "rbxassetid://14019230123",
+    Speed = 30,
+    MoveDelay = 10,
+    HeightOffset = 0,
+    CanKill = true,
+    KillRange = 50,
+    SpawnInFront = false,
+    ShatterLights = true,
+    FlickerLights = {
+        Enabled = true,
+        Duration = 10
+    },
+    Cycles = {
+        Min =1,
+        Max =1,
+        Delay =5
+    },
+    CamShake = {
+        Enabled = true,
+        Values = {1.5, 20, 0.1, 1},
+        Range = 300
+    },
+    ResistCrucifix = false,
+    BreakCrucifix = true,
+    DeathMessage = {
+        "You died to who called Torment",
+        "That one is very fast",
+        "Try hide from it at any costs",
+        "You can do it!",
+        "Try better next times!"
+    },
+    IsCuriousLight = true
+})
+
+---====== Debug ======---
+
+entity.Debug.OnEntitySpawned = function()
+    print("Entity has spawned")
+
+    function GitAud(soundgit, filename)
+        SoundName = tostring(SoundName)
+        local url = soundgit
+        local FileName = filename
+        writefile(FileName..".mp3", game:HttpGet(url))
+        return (getcustomasset or getsynasset)(FileName..".mp3")
+    end
+
+    function CustomGitSound(soundlink, vol, filename)
+        local sound = Instance.new("Sound")
+        sound.SoundId = GitAud(soundlink, filename)
+        sound.Parent = workspace
+        sound.Volume = 1
+        sound.Name = "Giggling"
+        sound.Looped = true
+        sound:Play()
+    end
+
+    CustomGitSound("https://github.com/DoorsHubs/Tutorial/raw/refs/heads/main/lv_0_20250603113316.mp3?raw=true", 1, "StartTheme")
+
+    local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+    caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+    require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("RUN!", true)
+end
+
+entity.Debug.OnEntityDespawned = function()
+    print("Entity has despawned")
+    game.Workspace.Giggling:Destroy()
+end
+
+entity.Debug.OnEntityStartMoving = function()
+    print("Entity started moving")
+end
+
+entity.Debug.OnEntityFinishedRebound = function()
+    print("Entity finished rebound")
+end
+
+entity.Debug.OnEntityEnteredRoom = function(room)
+    print("Entity entered room:", room)
+end
+
+entity.Debug.OnLookAtEntity = function()
+    print("Player looking at entity")
+end
+
+entity.Debug.OnDeath = function()
+    print("Player has died")
+
+    -- Nhạc Guiding Light
+    local guidingSound = Instance.new("Sound")
+    guidingSound.SoundId = "rbxassetid://10483837590"
+    guidingSound.Volume = 3
+    guidingSound.PlaybackSpeed = 0.4
+    guidingSound.Parent = workspace
+    guidingSound:Play()
+
+    -- Caption Guiding Light
+    local captionGui = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+    captionGui.TextColor3 = Color3.fromRGB(0, 255, 255)
+    require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You died...", true)
+
+    -- Hint Guiding Light
+    firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {
+        "You died to Torment?",
+        "When it appears, you must run fast!",
+        "Because when it appears, it will run from room to room.",
+        "Otherwise it will kill you",
+        "Good luck",
+    }, "Yellow")
+end
+
+--[[
+    NOTE: By overwriting 'OnUseCrucifix', the default crucifixion will be ignored and this function will be called instead
+
+    entity.Debug.OnUseCrucifix = function()
+        print("Custom crucifixion script here")
+    end
+]]--
+
+---====== Run entity ======---
+
+Spawner.runEntity(entity)
