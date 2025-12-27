@@ -1,0 +1,136 @@
+-- ====== DREAD ONE-TIME SPAWN LOCK ======
+if _G.DreadClockSpawned then
+    return
+end
+_G.DreadClockSpawned = true
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+-- ====== Services ======
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+
+-- ====== Tạo DreadClock ======
+local currentRoom = workspace.CurrentRooms[ReplicatedStorage.GameData.LatestRoom.Value]
+
+local DreadClock = Instance.new("Model")
+DreadClock.Name = "DreadClock"
+DreadClock.Parent = currentRoom
+
+local eyes = game:GetObjects("rbxassetid://73481800813918")[1]
+
+local num = 0
+if currentRoom:FindFirstChild("PathfindNodes") then
+    num = math.floor(#currentRoom.PathfindNodes:GetChildren()/2)
+end
+
+local targetCFrame = (num == 0 and currentRoom[currentRoom.Name] or currentRoom.PathfindNodes[num]).CFrame + Vector3.new(0, 5, 0)
+eyes:PivotTo(targetCFrame)
+
+eyes.Parent = DreadClock
+if eyes.PrimaryPart then
+    eyes.PrimaryPart.Anchored = true
+end
+
+wait(3.882)
+
+local Lighting = game.Lighting
+local CC = Lighting:FindFirstChild("MainColorCorrection")
+if not CC then
+    CC = Instance.new("ColorCorrectionEffect")
+    CC.Name = "MainColorCorrection"
+    CC.Parent = Lighting
+end
+
+-- Thiết lập ban đầu
+CC.TintColor = Color3.fromRGB(255, 255, 255)
+CC.Contrast = 0.8
+CC.Saturation = -0.9
+
+TweenService:Create(CC, TweenInfo.new(5), {Contrast = 0, Saturation = 0, TintColor = Color3.fromRGB(60, 119, 179)}):Play()
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "DreadClockEffect"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Black background
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+bg.BackgroundTransparency = 0.3
+bg.Parent = gui
+
+-- White glow in the center
+local glow = Instance.new("ImageLabel")
+glow.Size = UDim2.new(1, 0, 1, 0)
+glow.BackgroundTransparency = 1
+glow.Image = "rbxassetid://15836255172" -- radial glow trắng
+glow.ImageTransparency = 0.2 -- chỉnh độ mờ
+glow.ScaleType = Enum.ScaleType.Stretch
+glow.Parent = bg
+
+-- ====== Hàm tải âm thanh ======
+local function GitAud(soundlink, filename)
+    if not isfile(filename..".mp3") then
+        writefile(filename..".mp3", game:HttpGet(soundlink))
+    end
+    return (getcustomasset or getsynasset)(filename..".mp3")
+end
+
+-- ====== Chạy âm thanh ======
+local DreadSound = Instance.new("Sound")
+DreadSound.SoundId = GitAud("https://github.com/Kotyara19k-Doorsspawner/Random-files/raw/main/ClockSounds.mp3", "DreadClock")
+DreadSound.Volume = 7
+DreadSound.Looped = true
+DreadSound.Parent = workspace
+DreadSound:Play()
+
+local distort2 = Instance.new("DistortionSoundEffect")
+distort2.Parent = DreadSound
+distort2.Level = 0.01
+
+-- ====== Giảm tốc độ người chơi mượt dựa trên tốc độ hiện tại ======
+local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+    local originalSpeed = humanoid.WalkSpeed -- tốc độ hiện tại khi DreadClock xuất hiện
+    local targetSpeed = 7 -- tốc độ tối thiểu muốn giảm xuống
+    local totalDuration = 35
+    local slowInterval = 0.5
+    local step = (originalSpeed - targetSpeed) * (slowInterval / 0.2) -- giảm mượt mỗi 0.1s
+
+    local elapsed = 0
+    while elapsed < totalDuration and humanoid and DreadClock.Parent do
+        wait(slowInterval)
+        elapsed = elapsed + slowInterval
+        humanoid.WalkSpeed = math.max(targetSpeed, humanoid.WalkSpeed - step)
+    end
+
+    -- Khi DreadClock destroy hoặc hết thời gian, trả lại tốc độ ban đầu
+    humanoid.WalkSpeed = originalSpeed
+end
+
+-- ====== Xóa DreadClock và GUI ======
+if DreadClock then
+    DreadClock:Destroy()
+end
+if gui then
+    gui:Destroy()
+end
+
+-- ====== Lighting reset ======
+CC.TintColor = Color3.fromRGB(60, 119, 179)
+CC.Contrast = 0.8
+CC.Saturation = -0.9
+TweenService:Create(CC, TweenInfo.new(5), {Contrast = 0, Saturation = 0, TintColor = Color3.fromRGB(255,255,255)}):Play()
+
+-- Dừng âm thanh
+DreadSound:Stop()
+DreadSound:Destroy()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/eoyoustme/Script/refs/heads/main/Dread4221"))()
